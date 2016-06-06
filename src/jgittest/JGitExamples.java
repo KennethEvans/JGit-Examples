@@ -38,7 +38,7 @@ class Main
         CloneCommand cc = new CloneCommand().setCredentialsProvider(cp)
             .setDirectory(dir).setURI(url);
         Git git = null;
-        ;
+
         try {
             git = cc.call();
         } catch(GitAPIException ex1) {

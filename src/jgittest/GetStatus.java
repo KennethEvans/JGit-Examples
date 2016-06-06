@@ -28,6 +28,7 @@ public class GetStatus
     new File("C:/Git/SVN/AppInfo"), new File("C:/Git/jgit-cookbook"),
     new File("C:/Git/color-thief-java"),
     new File("C:/eclipseProjects/GitWorkspace"),
+    new File("C:/eclipseWorkspaces/Work/JGit"),
     // End
   };
 
