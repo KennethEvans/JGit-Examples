@@ -40,6 +40,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 public class JGitTest
 {
+    public static final boolean DRY_RUN = true;
     public static final boolean DO = true;
     public static final boolean USE_CUSTOM_CREDENTIALS_PROVIDER = true;
 
@@ -75,7 +76,7 @@ public class JGitTest
         System.out.println("*** Push");
         boolean all = true;
         boolean force = true;
-        boolean dryRun = true;
+        boolean dryRun = DRY_RUN;
         String remote = Constants.DEFAULT_REMOTE_NAME; // "origin"
         // String receivePack = RemoteConfig.DEFAULT_RECEIVE_PACK;
         // boolean thin = Transport.DEFAULT_PUSH_THIN;
