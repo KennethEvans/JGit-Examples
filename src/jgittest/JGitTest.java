@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -21,8 +20,7 @@ import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PushCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.errors.NoWorkTreeException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Config;
@@ -36,6 +34,7 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
@@ -43,6 +42,8 @@ public class JGitTest
 {
     public static final boolean DO = true;
     public static final boolean USE_CUSTOM_CREDENTIALS_PROVIDER = true;
+
+    public static final String LS = System.getProperty("line.separator");
 
     private static File DEFAULT_REPOISTORY = new File(
         "C:/AndroidStudioProjects/BLE Cardiac Monitor");
@@ -96,7 +97,16 @@ public class JGitTest
                 return;
             }
             // repository = git.getRepository();
+            
+            // Get the status of the repository
+            String statusInfo = getRepositoryStatus(git);
+            if(statusInfo != null) {
+                System.out.println();
+                System.out.println("Status");
+                System.out.println(statusInfo);
+            }
 
+            // Prompt for credentials
             String password = null;
             String name = null;
             JLabel userNameLabel = new JLabel("User Name");
@@ -120,6 +130,7 @@ public class JGitTest
                 return;
             }
 
+            // Make a credentials provider
             if(USE_CUSTOM_CREDENTIALS_PROVIDER) {
                 cp = new CustomCredentialsProvider(name, password);
             } else {
@@ -141,27 +152,107 @@ public class JGitTest
             ok = cp.supports(ciStringType);
             System.out.println("Supports StringType: " + ok);
 
+            // Push
             PushCommand pushCmd = git.push();
             pushCmd.setCredentialsProvider(cp).setRemote(remote).setForce(force)
                 .setDryRun(dryRun);
             if(all) {
                 pushCmd.setPushAll();
             }
-            try {
-                Iterator<PushResult> it = pushCmd.call().iterator();
-                if(it.hasNext()) {
-                    System.out.println(it.next().toString());
+
+            System.out.println("Processing...");
+            Iterable<PushResult> results = pushCmd.call();
+            if(results != null) {
+                String info;
+                for(PushResult result : results) {
+                    info = handlePushResult(result);
+                    if(info != null) {
+                        System.out.println(info);
+                    }
                 }
-            } catch(InvalidRemoteException e) {
-                e.printStackTrace();
-            } catch(TransportException ex) {
-                ex.printStackTrace();
-            } catch(GitAPIException ex) {
-                ex.printStackTrace();
             }
         } catch(Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * Creates a string message to be displayed on client side to inform the
+     * user about the push operation.
+     */
+    public static String handlePushResult(PushResult pushResult) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(pushResult.getMessages());
+        sb.append(LS);
+        for(RemoteRefUpdate rru : pushResult.getRemoteUpdates()) {
+            String remoteName = rru.getRemoteName();
+            RemoteRefUpdate.Status status = rru.getStatus();
+            sb.append(remoteName);
+            sb.append(" -> ");
+            sb.append(status.name());
+            sb.append(LS);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Get status info.
+     * 
+     * @param git The Git to use.
+     * @return
+     */
+    public static String getRepositoryStatus(Git git) {
+        StringBuffer sb = new StringBuffer();
+        Status status = null;
+        try {
+            status = git.status().call();
+        } catch(NoWorkTreeException ex) {
+            sb.append(ex.getMessage() + LS);
+        } catch(GitAPIException ex) {
+            sb.append(ex.getMessage() + LS);
+        }
+
+        boolean isClean = status.isClean();
+        sb.append("Clean: " + status.isClean() + LS);
+        if(!isClean) {
+            sb.append("Added: " + status.getAdded() + LS);
+            sb.append("Changed: " + status.getChanged() + LS);
+            sb.append("Conflicting: " + status.getConflicting() + LS);
+            sb.append("ConflictingStageState: "
+                + status.getConflictingStageState() + LS);
+            sb.append(
+                "IgnoredNotInIndex: " + status.getIgnoredNotInIndex() + LS);
+            sb.append("Missing: " + status.getMissing() + LS);
+            sb.append("Modified: " + status.getModified() + LS);
+            sb.append("Removed: " + status.getRemoved() + LS);
+            sb.append("Untracked: " + status.getUntracked() + LS);
+            sb.append("UntrackedFolders: " + status.getUntrackedFolders() + LS);
+        }
+
+        // Branch tracking
+        sb.append(LS);
+        Repository repository = git.getRepository();
+        List<Ref> call;
+        try {
+            call = git.branchList().call();
+            for(Ref ref : call) {
+                List<Integer> counts;
+                try {
+                    counts = getTrackingCounts(repository, ref.getName(), true);
+                    sb.append("For branch: " + ref.getName() + LS);
+                    sb.append("Commits ahead : " + counts.get(0) + LS);
+                    sb.append("Commits behind : " + counts.get(1) + LS);
+                } catch(IOException ex) {
+                    // TODO Auto-generated catch block
+                    sb.append("Error getting counts: " + ex.getMessage());
+                    continue;
+                }
+            }
+        } catch(GitAPIException ex1) {
+            sb.append("Error getting branch list: " + ex1.getMessage());
+        }
+
+        return sb.toString();
     }
 
     /**
