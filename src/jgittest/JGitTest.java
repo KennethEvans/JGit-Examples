@@ -26,6 +26,7 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.BranchTrackingStatus;
 import org.eclipse.jgit.lib.Config;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -41,6 +42,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 public class JGitTest
 {
     public static final boolean DO = true;
+    public static final boolean USE_CUSTOM_CREDENTIALS_PROVIDER = true;
 
     private static File DEFAULT_REPOISTORY = new File(
         "C:/AndroidStudioProjects/BLE Cardiac Monitor");
@@ -73,6 +75,7 @@ public class JGitTest
         boolean all = true;
         boolean force = true;
         boolean dryRun = true;
+        String remote = Constants.DEFAULT_REMOTE_NAME; // "origin"
         // String receivePack = RemoteConfig.DEFAULT_RECEIVE_PACK;
         // boolean thin = Transport.DEFAULT_PUSH_THIN;
         // boolean tags = true;
@@ -84,6 +87,7 @@ public class JGitTest
         Git git;
         File file = DEFAULT_REPOISTORY;
         System.out.println(file.getPath());
+        CredentialsProvider cp = null;
         try {
             try {
                 git = Git.open(file);
@@ -99,6 +103,8 @@ public class JGitTest
             JTextField userNameTF = new JTextField();
             JLabel passwordLabel = new JLabel("Password");
             JTextField passwordField = new JPasswordField();
+            // String[] item = new String[]{"Male", "Female"};
+            // JComboBox box = new JComboBox(item);
             Object[] msgItems = {userNameLabel, userNameTF, passwordLabel,
                 passwordField};
             int res = JOptionPane.showConfirmDialog(null, msgItems,
@@ -114,22 +120,30 @@ public class JGitTest
                 return;
             }
 
-            CredentialsProvider cp = new UsernamePasswordCredentialsProvider(
-                name, password);
+            if(USE_CUSTOM_CREDENTIALS_PROVIDER) {
+                cp = new CustomCredentialsProvider(name, password);
+            } else {
+                cp = new UsernamePasswordCredentialsProvider(name, password);
+            }
             boolean ok;
             name = null;
             password = null;
 
+            // DEBUG
             CredentialItem ciPassword = new CredentialItem.Password();
             ok = cp.supports(ciPassword);
             System.out.println("Supports Password: " + ok);
             CredentialItem ciUsername = new CredentialItem.Username();
             ok = cp.supports(ciUsername);
             System.out.println("Supports Username: " + ok);
+            CredentialItem ciStringType = new CredentialItem.StringType(
+                "Enter Password", true);
+            ok = cp.supports(ciStringType);
+            System.out.println("Supports StringType: " + ok);
 
             PushCommand pushCmd = git.push();
-            pushCmd.setCredentialsProvider(cp).setRemote(DEFAULT_REMOTE)
-                .setForce(force).setDryRun(dryRun);
+            pushCmd.setCredentialsProvider(cp).setRemote(remote).setForce(force)
+                .setDryRun(dryRun);
             if(all) {
                 pushCmd.setPushAll();
             }
