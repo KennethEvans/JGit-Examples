@@ -12,9 +12,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.PushCommand;
@@ -756,8 +753,6 @@ public class JGitTest
      * @param args
      */
     public static void main(String[] args) {
-        BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.WARN);
         if(!USE_DEFAULT_REPOSITORY_LOCATIONS) {
             repositoryLocations = setRepositoryLocationsFromDir(PROJECT_DIRS);
         }

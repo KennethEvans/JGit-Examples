@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
@@ -273,8 +270,6 @@ public class GetStatus
    * @param args
    */
   public static void main(String[] args) {
-    BasicConfigurator.configure();
-    Logger.getRootLogger().setLevel(Level.WARN);
     repositoryLocations = setRepositoryLocations(PARENT_DIRS,
       INDIVIDUAL_REPOSITORIES);
 
