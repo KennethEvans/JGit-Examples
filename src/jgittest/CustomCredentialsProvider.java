@@ -75,11 +75,11 @@ public class CustomCredentialsProvider extends CredentialsProvider
                         .setValue(new String(password));
                     continue;
                 }
-                // if (i.getPromptText().equals("Password: ")) {
-                // ((CredentialItem.StringType) i).setValue(new String(
-                // password));
-                // continue;
-                // }
+                if(i.getPromptText().equals("Password: ")) {
+                    ((CredentialItem.StringType)i)
+                        .setValue(new String(password));
+                    continue;
+                }
             }
             throw new UnsupportedCredentialItem(uri,
                 i.getClass().getName() + ":" + i.getPromptText());
