@@ -66,15 +66,15 @@ public class GetStatus
     int dirtyCount = 0;
     int trackingCountAhead = 0;
     int trackingCountBehind = 0;
-    int noTrackingCount = 0;
+    int notTrackingCount = 0;
     int notFoundCount = 0;
     ArrayList<File> dirtyFiles = new ArrayList<>();
     ArrayList<File> aheadFiles = new ArrayList<>();
     ArrayList<File> behindFiles = new ArrayList<>();
-    ArrayList<File> noTrackingFiles = new ArrayList<>();
+    ArrayList<File> notTrackingFiles = new ArrayList<>();
     ArrayList<File> notFoundFiles = new ArrayList<>();
     String tab = "    ";
-    boolean noTrackingFlag;
+    boolean notTrackingFlag;
     for(File file : repositoryLocations) {
 //      if(!summaryOnly) {
         System.out.println(file.getPath());
@@ -122,12 +122,12 @@ public class GetStatus
 
         // Branch tracking
         if(doBranchTracking) {
-          noTrackingFlag = false;
+          notTrackingFlag = false;
           repository = git.getRepository();
           List<Ref> call = git.branchList().call();
           if(!summaryOnly && call.size() == 0) {
-            noTrackingCount++;
-            noTrackingFiles.add(file);
+            notTrackingCount++;
+            notTrackingFiles.add(file);
             System.out.println("No branches found for " + file.getPath());
           }
 
@@ -142,12 +142,12 @@ public class GetStatus
               behindFiles.add(file);
             }
             if(counts.get(0) < 0 || counts.get(1) < 0) {
-              noTrackingFlag = true;
-              noTrackingCount++;
-              noTrackingFiles.add(file);
+              notTrackingFlag = true;
+              notTrackingCount++;
+              notTrackingFiles.add(file);
             }
             if(!summaryOnly) {
-              if(noTrackingFlag) {
+              if(notTrackingFlag) {
                 System.out
                   .println("No tracking found for branch " + ref.getName());
               } else {
@@ -171,7 +171,7 @@ public class GetStatus
     System.out.println("Total: " + totalCount +
 
       ", Dirty: " + dirtyCount + ", Behind: " + trackingCountBehind
-      + ", Ahead: " + trackingCountAhead + ", No tracking: " + noTrackingCount
+      + ", Ahead: " + trackingCountAhead + ", No tracking: " + notTrackingCount
       + ", Not found: " + notFoundCount);
     if(dirtyCount > 0)
 
@@ -196,10 +196,10 @@ public class GetStatus
         System.out.println(tab + file.getPath());
       }
     }
-    if(noTrackingCount > 0) {
+    if(notTrackingCount > 0) {
       System.out.println();
       System.out.println("No Tracking");
-      for(File file : noTrackingFiles) {
+      for(File file : notTrackingFiles) {
         System.out.println(tab + file.getPath());
       }
     }
